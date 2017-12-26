@@ -1,4 +1,4 @@
-# HALF BLIND BUT STILL WALKING
+# Large Font Fitness Watch
 
 Clock face for [Fitbit Ionic](https://www.fitbit.com/ionic) - Fitness tracker and smartwatch.
 
