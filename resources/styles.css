@@ -1,0 +1,74 @@
+.background {
+  viewport-fill: black;
+}
+
+#myLabelTime {
+  font-size: 100;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: middle;
+  x: 43%;
+  y: 13%+50;
+  fill: white;
+}
+
+#myLabelMiddle {
+  font-size: 70;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: middle;
+  x: 50%;
+  y: 45%+40;
+  fill: white;
+}
+
+#myLabelBatt {
+  font-size: 70;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: end;
+  x: 95%;
+  y: 75%+40;
+  fill: white;
+}
+
+#myLabelHR {
+  font-size: 70;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: middle;
+  x: 25%;
+  y: 75%+40;
+  fill: white;
+}
+
+#myLabelSeparator {
+  font-size: 70;
+  font-family: Colfax-Thin;
+  text-length: 32;
+  text-anchor: middle;
+  x: 45%;
+  y: 75%+40;
+  fill: dimgray;
+}
+
+#myLabelDay {
+  font-size: 45;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: middle;
+  x: 90%;
+  y: 19%;
+  fill: white;
+}
+
+#myLabelDayText {
+  font-size: 30;
+  font-family: Colfax-Medium;
+  text-length: 32;
+  text-anchor: middle;
+  x: 90%;
+  y: 33%;
+  fill: white;
+}
+

@@ -1,0 +1,23 @@
+<svg class="background">
+    
+  <text id="myLabelTime" />
+  <text id="myLabelMiddle" />
+  <text id="myLabelBatt" />
+  <text id="myLabelSeparator" />
+  <text id="myLabelHR" />
+  <text id="myLabelDay" />
+  <text id="myLabelDayText" />
+
+  <use id="myMiddleButton" href="#square-button" y="80" height="96"
+     fill="black" >
+        <set href="#text" attributeName="text-buffer" to="" />
+  </use>
+  <svg y="160">
+    <use id="myHRButton" href="#square-button" fill="black" height="88" width="50%">
+        <set href="#text" attributeName="text-buffer" to="" />
+    </use>
+    <use id="myBattButton" href="#square-button" value="1" x="50%" fill="black" height="88" visibility="false">
+        <set href="#text" attributeName="text-buffer" to="" />
+    </use>
+  </svg>
+</svg>
