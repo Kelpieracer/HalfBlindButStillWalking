@@ -26,7 +26,7 @@ function spacePad(i) {
 
 console.log("App Started");
 var dayTexts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-var middleModes = { STEPS: 1, CALS: 2, DISTANCE: 3, DURATION: 4 };
+var activityModes = { STEPS: 1, CALS: 2, DISTANCE: 3, DURATION: 4 };
 var hrControls = { OFF: 0, CUSTOM: 1, FAT: 2, CARDIO: 3, PEAK: 4 };
 var hrm = new heartRate.HeartRateSensor();
 var easyCol = "lightgrey";
@@ -34,12 +34,13 @@ var okCol = "lawngreen";
 var warnCol = "yellow";
 var hotCol = "fb-red";
 var offCol = "black";
+var customCol = "aqua";
 display.display.autoOff = true;
 clock.granularity = "seconds";
 var myLabelTime = document.getElementById("myLabelTime");
-var myMiddleButton = document.getElementById("myMiddleButton");
+var myActivityButton = document.getElementById("myActivityButton");
 var myHRButton = document.getElementById("myHRButton");
-var myLabelMiddle = document.getElementById("myLabelMiddle");
+var myLabelActivity = document.getElementById("myLabelActivity");
 var myLabelBatt = document.getElementById("myLabelBatt");
 var myLabelSeparator = document.getElementById("myLabelSeparator");
 var myLabelHR = document.getElementById("myLabelHR");
@@ -47,7 +48,7 @@ var myLabelDay = document.getElementById("myLabelDay");
 var myLabelDayText = document.getElementById("myLabelDayText");
 myLabelSeparator.text = "";
 var secondsFromDisplayOn = 0;
-var middleMode = 1;
+var activityMode = 1;
 var hrMode = 0;
 function updateClock() {
     var dateToday = new Date();
@@ -70,14 +71,14 @@ function updateClock() {
         myLabelBatt.style.fill = warnCol;
     else
         myLabelBatt.style.fill = easyCol;
-    var val = middleVal(middleMode);
+    var val = activityVal(activityMode);
     if (val.now < val.goal * 0.7)
-        myLabelMiddle.style.fill = hotCol;
+        myLabelActivity.style.fill = hotCol;
     else if (val.now < val.goal)
-        myLabelMiddle.style.fill = warnCol;
+        myLabelActivity.style.fill = warnCol;
     else
-        myLabelMiddle.style.fill = okCol;
-    myLabelMiddle.text = val.now + val.unit;
+        myLabelActivity.style.fill = okCol;
+    myLabelActivity.text = val.now + val.unit;
     var hr = hrm.heartRate;
     myLabelHR.text = hr ? hr : "";
     if (hr && hr > 0) {
@@ -98,6 +99,7 @@ function displayChange() {
     if (display.display.on) {
         console.log("Display on event");
         hrm.start();
+        console.log("HRM started");
         secondsFromDisplayOn = 0;
     }
     else {
@@ -109,19 +111,19 @@ function displayChange() {
         secondsFromDisplayOn = 0;
     }
 }
-function middleVal(mode) {
-    if (mode == middleModes.STEPS)
+function activityVal(mode) {
+    if (mode == activityModes.STEPS)
         return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: " stp" };
-    if (mode == middleModes.CALS) {
+    if (mode == activityModes.CALS) {
         var dateToday = new Date();
         var dayPart = (dateToday.getHours() * 60 + dateToday.getMinutes()) / (24 * 60);
         var bmr = userProfile.user.bmr;
         var bmrCalsUntilNow = Math.round(bmr * dayPart);
         return { now: userActivity.today.local.calories - bmrCalsUntilNow, goal: bmr * 0.5, unit: " kcal" };
     }
-    if (mode == middleModes.DISTANCE)
+    if (mode == activityModes.DISTANCE)
         return { now: userActivity.today.local.distance, goal: userActivity.goals.distance, unit: " m" };
-    if (mode == middleModes.DURATION)
+    if (mode == activityModes.DURATION)
         return { now: userActivity.today.local.activeMinutes, goal: userActivity.goals.activeMinutes, unit: " min" };
 }
 function isCustomHR() {
@@ -131,17 +133,18 @@ function isCustomHR() {
         return false;
 }
 function changeHRMode(add) {
-    hrMode = (hrMode + add) % 5;
     if (isCustomHR()) {
-        if (hrMode > hrControls.CUSTOM) {
-            hrMode = 0;
-            myHRButton.fill = offCol;
+        if (hrMode !== hrControls.OFF) {
+            hrMode = hrControls.OFF;
+            myHRButton.style.fill = offCol;
         }
         else {
-            myHRButton.fill = okCol;
+            hrMode = hrControls.CUSTOM;
+            myHRButton.style.fill = customCol;
         }
     }
-    else if (!isCustomHR()) {
+    else {
+        hrMode = (hrMode + add) % 5;
         if (hrMode == hrControls.CUSTOM) {
             hrMode += 1;
         }
@@ -154,6 +157,7 @@ function changeHRMode(add) {
         if (hrMode == hrControls.PEAK)
             myHRButton.style.fill = hotCol;
     }
+    console.log("New HR control mode:" + hrMode);
 }
 var slowPlay = 0;
 var fastPlay = 0;
@@ -189,7 +193,7 @@ function playTooFastSound() {
     fastPing();
     display.display.on = true;
 }
-function refreshHRCheck() {
+function controlHR() {
     var hr = hrm.heartRate;
     console.log("HR check:" + hr);
     if (hrMode !== hrControls.OFF) {
@@ -204,7 +208,7 @@ function refreshHRCheck() {
     if (!hr || hr <= 0 || hrMode == hrControls.OFF)
         return;
     var zone = userProfile.user.heartRateZone(hr);
-    var hrCheckLowLimit = userProfile.user.restingHeartRate * (hrMode == hrControls.FAT ? 1.15 : 1.3);
+    var hrCheckLowLimit = userProfile.user.restingHeartRate * (hrMode == hrControls.FAT ? 1.15 : 1.2);
     console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + hrMode);
     if (hr > hrCheckLowLimit && hrMode !== hrControls.OFF) {
         if (isCustomHR()) {
@@ -239,9 +243,9 @@ function refreshHRCheck() {
         }
     }
 }
-myMiddleButton.onactivate = function (evt) {
+myActivityButton.onactivate = function (evt) {
     haptics.vibration.start("bump");
-    middleMode = (middleMode) % 4 + 1;
+    activityMode = (activityMode) % 4 + 1;
     updateClock();
 };
 myHRButton.onactivate = function (evt) {
@@ -252,5 +256,5 @@ changeHRMode(0);
 display.display.onchange = function () { return displayChange(); };
 clock.ontick = function () { return updateClock(); };
 hrm.start();
-refreshHRCheck();
-setInterval(refreshHRCheck, 20000);
+controlHR();
+setInterval(controlHR, 20000);

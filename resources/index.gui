@@ -1,14 +1,14 @@
 <svg class="background">
     
   <text id="myLabelTime" />
-  <text id="myLabelMiddle" />
+  <text id="myLabelActivity" />
   <text id="myLabelBatt" />
   <text id="myLabelSeparator" />
   <text id="myLabelHR" />
   <text id="myLabelDay" />
   <text id="myLabelDayText" />
 
-  <use id="myMiddleButton" href="#square-button" y="80" height="96"
+  <use id="myActivityButton" href="#square-button" y="80" height="96"
      fill="black" >
         <set href="#text" attributeName="text-buffer" to="" />
   </use>
