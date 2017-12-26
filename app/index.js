@@ -3,6 +3,7 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var heartRate = require('heart-rate');
+var fs = require('fs');
 var clock = _interopDefault(require('clock'));
 var document = _interopDefault(require('document'));
 var userActivity = require('user-activity');
@@ -24,32 +25,68 @@ function spacePad(i) {
     return i;
 }
 
-console.log("App Started");
+var hrm = new heartRate.HeartRateSensor();
+var first = true;
+function start() {
+    hrm.start();
+}
+function stop() {
+    first = true;
+    hrm.stop();
+}
+function heartRate$1() {
+    hrm.start();
+    if (first) {
+        first = false;
+        return 0;
+    }
+    return hrm.heartRate;
+}
+
+var fn = "store.json";
+function load(obj) {
+    try {
+        var stats = fs.statSync(fn);
+    }
+    catch (err) {
+        fs.writeFileSync(fn, obj, "json");
+        return obj;
+    }
+    if (stats) {
+        obj = fs.readFileSync(fn, "json");
+        return obj;
+    }
+    else {
+        fs.writeFileSync(fn, obj, "json");
+        return obj;
+    }
+    console.log("load:" + JSON.stringify(obj));
+}
+function write(obj) {
+    fs.writeFileSync(fn, obj, "json");
+    console.log("write:" + JSON.stringify(obj));
+}
+
 var dayTexts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var activityModes = { STEPS: 1, CALS: 2, DISTANCE: 3, DURATION: 4 };
 var hrControls = { OFF: 0, CUSTOM: 1, FAT: 2, CARDIO: 3, PEAK: 4 };
-var hrm = new heartRate.HeartRateSensor();
-var easyCol = "lightgrey";
+var vault = { hrMode: hrControls.OFF, activityMode: activityModes.STEPS };
+var easyCol = "white";
 var okCol = "lawngreen";
 var warnCol = "yellow";
 var hotCol = "fb-red";
 var offCol = "black";
 var customCol = "aqua";
-display.display.autoOff = true;
 clock.granularity = "seconds";
 var myLabelTime = document.getElementById("myLabelTime");
 var myActivityButton = document.getElementById("myActivityButton");
 var myHRButton = document.getElementById("myHRButton");
 var myLabelActivity = document.getElementById("myLabelActivity");
 var myLabelBatt = document.getElementById("myLabelBatt");
-var myLabelSeparator = document.getElementById("myLabelSeparator");
 var myLabelHR = document.getElementById("myLabelHR");
 var myLabelDay = document.getElementById("myLabelDay");
 var myLabelDayText = document.getElementById("myLabelDayText");
-myLabelSeparator.text = "";
 var secondsFromDisplayOn = 0;
-var activityMode = 1;
-var hrMode = 0;
 function updateClock() {
     var dateToday = new Date();
     var hours = spacePad(dateToday.getHours());
@@ -71,7 +108,7 @@ function updateClock() {
         myLabelBatt.style.fill = warnCol;
     else
         myLabelBatt.style.fill = easyCol;
-    var val = activityVal(activityMode);
+    var val = activityVal(vault.activityMode);
     if (val.now < val.goal * 0.7)
         myLabelActivity.style.fill = hotCol;
     else if (val.now < val.goal)
@@ -79,7 +116,7 @@ function updateClock() {
     else
         myLabelActivity.style.fill = okCol;
     myLabelActivity.text = val.now + val.unit;
-    var hr = hrm.heartRate;
+    var hr = heartRate$1();
     myLabelHR.text = hr ? hr : "";
     if (hr && hr > 0) {
         var zone = userProfile.user.heartRateZone(hr);
@@ -98,14 +135,14 @@ function updateClock() {
 function displayChange() {
     if (display.display.on) {
         console.log("Display on event");
-        hrm.start();
+        start();
         console.log("HRM started");
         secondsFromDisplayOn = 0;
     }
     else {
         console.log("Display off event");
-        if (hrMode == hrControls.OFF) {
-            hrm.stop();
+        if (vault.hrMode == hrControls.OFF) {
+            stop();
             console.log("HRM stopped");
         }
         secondsFromDisplayOn = 0;
@@ -113,7 +150,7 @@ function displayChange() {
 }
 function activityVal(mode) {
     if (mode == activityModes.STEPS)
-        return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: " stp" };
+        return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: userActivity.today.local.steps >= 10000 ? " st." : userActivity.today.local.steps >= 1000 ? " step" : " steps" };
     if (mode == activityModes.CALS) {
         var dateToday = new Date();
         var dayPart = (dateToday.getHours() * 60 + dateToday.getMinutes()) / (24 * 60);
@@ -134,30 +171,31 @@ function isCustomHR() {
 }
 function changeHRMode(add) {
     if (isCustomHR()) {
-        if (hrMode !== hrControls.OFF) {
-            hrMode = hrControls.OFF;
+        if (vault.hrMode !== hrControls.OFF) {
+            vault.hrMode = hrControls.OFF;
             myHRButton.style.fill = offCol;
         }
         else {
-            hrMode = hrControls.CUSTOM;
+            vault.hrMode = hrControls.CUSTOM;
             myHRButton.style.fill = customCol;
         }
     }
     else {
-        hrMode = (hrMode + add) % 5;
-        if (hrMode == hrControls.CUSTOM) {
-            hrMode += 1;
+        vault.hrMode = (vault.hrMode + add) % 5;
+        if (vault.hrMode == hrControls.CUSTOM) {
+            vault.hrMode += 1;
         }
-        if (hrMode == hrControls.OFF)
+        if (vault.hrMode == hrControls.OFF)
             myHRButton.style.fill = offCol;
-        if (hrMode == hrControls.FAT)
+        if (vault.hrMode == hrControls.FAT)
             myHRButton.style.fill = okCol;
-        if (hrMode == hrControls.CARDIO)
+        if (vault.hrMode == hrControls.CARDIO)
             myHRButton.style.fill = warnCol;
-        if (hrMode == hrControls.PEAK)
+        if (vault.hrMode == hrControls.PEAK)
             myHRButton.style.fill = hotCol;
     }
-    console.log("New HR control mode:" + hrMode);
+    console.log("New HR control mode:" + vault.hrMode);
+    write(vault);
 }
 var slowPlay = 0;
 var fastPlay = 0;
@@ -194,50 +232,58 @@ function playTooFastSound() {
     display.display.on = true;
 }
 function controlHR() {
-    var hr = hrm.heartRate;
+    var hr = heartRate$1();
     console.log("HR check:" + hr);
-    if (hrMode !== hrControls.OFF) {
-        hrm.start();
+    if (vault.hrMode !== hrControls.OFF) {
+        start();
         console.log("HRM on");
     }
     else if (display.display.on == false) {
-        hrm.stop();
+        stop();
         console.log("HRM off");
         return;
     }
-    if (!hr || hr <= 0 || hrMode == hrControls.OFF)
+    if (!hr || hr <= 0 || vault.hrMode == hrControls.OFF)
         return;
     var zone = userProfile.user.heartRateZone(hr);
-    var hrCheckLowLimit = userProfile.user.restingHeartRate * (hrMode == hrControls.FAT ? 1.15 : 1.2);
-    console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + hrMode);
-    if (hr > hrCheckLowLimit && hrMode !== hrControls.OFF) {
+    var hrCheckLowLimit = userProfile.user.restingHeartRate * (vault.hrMode == hrControls.FAT ? 1.15 : 1.2);
+    console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + vault.hrMode);
+    if (hr > hrCheckLowLimit && vault.hrMode !== hrControls.OFF) {
         if (isCustomHR()) {
             console.log("custom");
             if (zone == "below-custom")
                 playTooSlowSound();
             else if (zone == "above-custom")
                 playTooFastSound();
+            else
+                haptics.vibration.start("bump");
         }
         else {
             console.log("standard");
-            if (hrMode == hrControls.FAT) {
+            if (vault.hrMode == hrControls.FAT) {
                 console.log("fat " + zone);
                 if (zone == "out-of-range")
                     playTooSlowSound();
                 else if (zone == "cardio" || zone == "peak")
                     playTooFastSound();
+                else
+                    haptics.vibration.start("bump");
             }
-            if (hrMode == hrControls.CARDIO) {
+            if (vault.hrMode == hrControls.CARDIO) {
                 console.log("cardio " + zone);
                 if (zone == "out-of-range" || zone == "fat-burn")
                     playTooSlowSound();
                 else if (zone == "peak")
                     playTooFastSound();
+                else
+                    haptics.vibration.start("bump");
             }
-            if (hrMode == hrControls.PEAK) {
+            if (vault.hrMode == hrControls.PEAK) {
                 console.log("peak " + zone);
                 if (zone !== "peak")
                     playTooSlowSound();
+                else
+                    haptics.vibration.start("bump");
             }
             
         }
@@ -245,16 +291,19 @@ function controlHR() {
 }
 myActivityButton.onactivate = function (evt) {
     haptics.vibration.start("bump");
-    activityMode = (activityMode) % 4 + 1;
+    vault.activityMode = (vault.activityMode) % 4 + 1;
+    write(vault);
     updateClock();
 };
 myHRButton.onactivate = function (evt) {
     haptics.vibration.start("bump");
     changeHRMode(1);
 };
+vault = load(vault);
+display.display.autoOff = true;
 changeHRMode(0);
 display.display.onchange = function () { return displayChange(); };
 clock.ontick = function () { return updateClock(); };
-hrm.start();
+start();
 controlHR();
 setInterval(controlHR, 20000);

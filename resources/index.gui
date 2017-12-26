@@ -3,7 +3,6 @@
   <text id="myLabelTime" />
   <text id="myLabelActivity" />
   <text id="myLabelBatt" />
-  <text id="myLabelSeparator" />
   <text id="myLabelHR" />
   <text id="myLabelDay" />
   <text id="myLabelDayText" />

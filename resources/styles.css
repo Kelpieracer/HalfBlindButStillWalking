@@ -42,16 +42,6 @@
   fill: white;
 }
 
-#myLabelSeparator {
-  font-size: 70;
-  font-family: Colfax-Thin;
-  text-length: 32;
-  text-anchor: middle;
-  x: 45%;
-  y: 75%+40;
-  fill: dimgray;
-}
-
 #myLabelDay {
   font-size: 45;
   font-family: Colfax-Medium;
