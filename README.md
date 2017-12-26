@@ -1,4 +1,3 @@
-# HalfBlindButStillWalking
 # HALF BLIND BUT STILL WALKING
 
 Clock face for [Fitbit Ionic](https://www.fitbit.com/ionic) - Fitness tracker and smartwatch.
