@@ -2,6 +2,7 @@
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
+var userProfile = require('user-profile');
 var heartRate = require('heart-rate');
 var fs = require('fs');
 var clock = _interopDefault(require('clock'));
@@ -9,7 +10,6 @@ var document = _interopDefault(require('document'));
 var userActivity = require('user-activity');
 var power = require('power');
 var display = require('display');
-var userProfile = require('user-profile');
 var haptics = require('haptics');
 
 function zeroPad(i) {
@@ -41,6 +41,12 @@ function heartRate$1() {
         return 0;
     }
     return hrm.heartRate;
+}
+function isCustomHR() {
+    if (userProfile.user.heartRateZone(100).indexOf("custom") > -1)
+        return true;
+    else
+        return false;
 }
 
 var fn = "store.json";
@@ -82,6 +88,7 @@ var myLabelTime = document.getElementById("myLabelTime");
 var myActivityButton = document.getElementById("myActivityButton");
 var myHRButton = document.getElementById("myHRButton");
 var myLabelActivity = document.getElementById("myLabelActivity");
+var myLabelActivityUnit = document.getElementById("myLabelActivityUnit");
 var myLabelBatt = document.getElementById("myLabelBatt");
 var myLabelHR = document.getElementById("myLabelHR");
 var myLabelDay = document.getElementById("myLabelDay");
@@ -109,13 +116,26 @@ function updateClock() {
     else
         myLabelBatt.style.fill = easyCol;
     var val = activityVal(vault.activityMode);
-    if (val.now < val.goal * 0.7)
+    if (val.now < val.goal * 0.7) {
         myLabelActivity.style.fill = hotCol;
-    else if (val.now < val.goal)
+    }
+    else if (val.now < val.goal) {
         myLabelActivity.style.fill = warnCol;
-    else
+    }
+    else {
         myLabelActivity.style.fill = okCol;
-    myLabelActivity.text = val.now + val.unit;
+    }
+    myLabelActivityUnit.style.fill = myLabelActivity.style.fill;
+    myLabelActivity.text = val.now;
+    myLabelActivityUnit.text = val.unit;
+    if (val.unit.length >= 6) {
+        myLabelActivityUnit.style.fontFamily = "Fabrikat-Bold";
+        myLabelActivityUnit.style.fontSize = 40;
+    }
+    else {
+        myLabelActivityUnit.style.fontFamily = "Colfax-Medium";
+        myLabelActivityUnit.style.fontSize = 45;
+    }
     var hr = heartRate$1();
     myLabelHR.text = hr ? hr : "";
     if (hr && hr > 0) {
@@ -123,11 +143,13 @@ function updateClock() {
         var hrcol = easyCol;
         if (zone == "out-of-range" || zone == "below-custom")
             hrcol = easyCol;
-        if (zone == "fat-burn" || zone == "custom")
+        else if (zone == "fat-burn")
             hrcol = okCol;
-        if (zone == "cardio")
+        else if (zone == "custom")
+            hrcol = customCol;
+        else if (zone == "cardio")
             hrcol = warnCol;
-        if (zone == "peak" || zone == "above-custom")
+        else if (zone == "peak" || zone == "above-custom")
             hrcol = hotCol;
         myLabelHR.style.fill = hrcol;
     }
@@ -150,24 +172,20 @@ function displayChange() {
 }
 function activityVal(mode) {
     if (mode == activityModes.STEPS)
-        return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: userActivity.today.local.steps >= 10000 ? " st." : userActivity.today.local.steps >= 1000 ? " step" : " steps" };
+        return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: " steps" };
     if (mode == activityModes.CALS) {
         var dateToday = new Date();
         var dayPart = (dateToday.getHours() * 60 + dateToday.getMinutes()) / (24 * 60);
         var bmr = userProfile.user.bmr;
+        var caloriesGoal = userActivity.goals.calories;
         var bmrCalsUntilNow = Math.round(bmr * dayPart);
-        return { now: userActivity.today.local.calories - bmrCalsUntilNow, goal: bmr * 0.5, unit: " kcal" };
+        console.log("cal now:" + userActivity.today.local.calories + " day%:" + dayPart + " bmr:" + bmr + " cal goal:" + caloriesGoal);
+        return { now: Math.max(0, userActivity.today.local.calories - bmrCalsUntilNow), goal: caloriesGoal - bmr, unit: " kcal" };
     }
     if (mode == activityModes.DISTANCE)
         return { now: userActivity.today.local.distance, goal: userActivity.goals.distance, unit: " m" };
     if (mode == activityModes.DURATION)
         return { now: userActivity.today.local.activeMinutes, goal: userActivity.goals.activeMinutes, unit: " min" };
-}
-function isCustomHR() {
-    if (userProfile.user.heartRateZone(100).indexOf("custom") > -1)
-        return true;
-    else
-        return false;
 }
 function changeHRMode(add) {
     if (isCustomHR()) {
