@@ -7,6 +7,7 @@ var heartRate = require('heart-rate');
 var fs = require('fs');
 var clock = _interopDefault(require('clock'));
 var document = _interopDefault(require('document'));
+var userSettings = require('user-settings');
 var userActivity = require('user-activity');
 var power = require('power');
 var display = require('display');
@@ -23,6 +24,52 @@ function spacePad(i) {
         i = " " + i;
     }
     return i;
+}
+function formatDate(hh, clock$$1, str) {
+    var dd = "AM";
+    var h = hh;
+    if (clock$$1 == "12h") {
+        if (h >= 12) {
+            h = hh - 12;
+            dd = "PM";
+        }
+        if (h == 0) {
+            h = 12;
+        }
+        str = dd;
+    }
+    return { hour: h, str: str };
+}
+function distanceRounded(dist, unit) {
+    var distVal = dist / 1000;
+    if (unit == "us")
+        distVal *= 0.621371;
+    var str = distVal.toString();
+    str = decimalAdjust("round", distVal, -3).toString();
+    if (str.length > 5)
+        str = decimalAdjust("round", distVal, -2).toString();
+    if (str.length > 5)
+        str = decimalAdjust("round", distVal, -1).toString();
+    if (str.length > 5)
+        str = decimalAdjust("round", distVal, 0).toString();
+    return str;
+}
+function decimalAdjust(type, value, exp) {
+    if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    if (value === null || isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+    }
+    if (value < 0) {
+        return -decimalAdjust(type, -value, exp);
+    }
+    value = value.toString().split('e');
+    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+    value = value.toString().split('e');
+    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
 }
 
 var hrm = new heartRate.HeartRateSensor();
@@ -73,6 +120,7 @@ function write(obj) {
     console.log("write:" + JSON.stringify(obj));
 }
 
+console.log(userSettings.units.distance);
 var dayTexts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var activityModes = { STEPS: 1, CALS: 2, DISTANCE: 3, DURATION: 4 };
 var hrControls = { OFF: 0, CUSTOM: 1, FAT: 2, CARDIO: 3, PEAK: 4 };
@@ -95,16 +143,18 @@ var myLabelDay = document.getElementById("myLabelDay");
 var myLabelDayText = document.getElementById("myLabelDayText");
 var secondsFromDisplayOn = 0;
 function updateClock() {
+    var distUnit = userSettings.units.distance;
     var dateToday = new Date();
-    var hours = spacePad(dateToday.getHours());
     var mins = zeroPad(dateToday.getMinutes());
     var day = dateToday.getDate();
     var dayNum = dateToday.getDay();
     var myBatt = power.battery.chargeLevel;
+    var timePreference = formatDate(dateToday.getHours(), userSettings.preferences.clockDisplay, dayTexts[dayNum]);
+    var hours = spacePad(timePreference.hour);
     myLabelTime.text = hours + ":" + mins;
     myLabelBatt.text = myBatt + "%";
     myLabelDay.text = day;
-    myLabelDayText.text = dayTexts[dayNum];
+    myLabelDayText.text = timePreference.str;
     secondsFromDisplayOn += 1;
     if (myBatt < 25 && secondsFromDisplayOn >= 5) {
         display.display.on = false;
@@ -115,7 +165,7 @@ function updateClock() {
         myLabelBatt.style.fill = warnCol;
     else
         myLabelBatt.style.fill = easyCol;
-    var val = activityVal(vault.activityMode);
+    var val = activityVal(vault.activityMode, distUnit);
     if (val.now < val.goal * 0.7) {
         myLabelActivity.style.fill = hotCol;
     }
@@ -126,7 +176,7 @@ function updateClock() {
         myLabelActivity.style.fill = okCol;
     }
     myLabelActivityUnit.style.fill = myLabelActivity.style.fill;
-    myLabelActivity.text = val.now;
+    myLabelActivity.text = (vault.activityMode == activityModes.DISTANCE ? distanceRounded(val.now, distUnit) : val.now);
     myLabelActivityUnit.text = val.unit;
     if (val.unit.length >= 6) {
         myLabelActivityUnit.style.fontFamily = "Fabrikat-Bold";
@@ -170,7 +220,7 @@ function displayChange() {
         secondsFromDisplayOn = 0;
     }
 }
-function activityVal(mode) {
+function activityVal(mode, distUnit) {
     if (mode == activityModes.STEPS)
         return { now: userActivity.today.local.steps, goal: userActivity.goals.steps, unit: " steps" };
     if (mode == activityModes.CALS) {
@@ -183,7 +233,7 @@ function activityVal(mode) {
         return { now: Math.max(0, userActivity.today.local.calories - bmrCalsUntilNow), goal: caloriesGoal - bmr, unit: " kcal" };
     }
     if (mode == activityModes.DISTANCE)
-        return { now: userActivity.today.local.distance, goal: userActivity.goals.distance, unit: " m" };
+        return { now: userActivity.today.local.distance, goal: userActivity.goals.distance, unit: (distUnit == "us" ? " mi" : " km") };
     if (mode == activityModes.DURATION)
         return { now: userActivity.today.local.activeMinutes, goal: userActivity.goals.activeMinutes, unit: " min" };
 }
