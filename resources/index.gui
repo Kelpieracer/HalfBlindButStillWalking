@@ -16,7 +16,7 @@
     <use id="myHRButton" href="#square-button" fill="black" height="88" width="50%">
         <set href="#text" attributeName="text-buffer" to="" />
     </use>
-    <use id="myBattButton" href="#square-button" value="1" x="50%" fill="black" height="88" visibility="hidden">
+    <use id="myBattButton" href="#square-button" value="1" x="50%" fill="black" height="88" width="50%" visibility="hidden">
         <set href="#text" attributeName="text-buffer" to="" />
     </use>
   </svg>
