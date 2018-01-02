@@ -11,7 +11,7 @@ export let controls = {OFF: 0, CUSTOM: 1, FAT:2, CARDIO: 3, PEAK: 4};
 let sensor = new HeartRateSensor();
 let hr = sensor.HeartRateSensorReading;
 
-static var first = true;
+export static let first = true;
 
 export function start() {
   sensor.start();
@@ -34,7 +34,10 @@ export function heartRate() {
 
 // returns true if custom HR is in use
 export function isCustomHR() {
-  if(user.heartRateZone(100).indexOf("custom") > -1)
+  _isCustomHR(user.heartRateZone(100))
+}
+export function _isCustomHR(zone) {
+  if(zone.indexOf("custom") > -1)
     return true;
   else
     return false;
@@ -44,53 +47,86 @@ export function isCustomHR() {
 // Monitors the target HR zone, and alerts if HR is too low or too high
 // If HR is near resting HR, then monitoring is off, since probably user's intention is then not to excercise.
 export function controlHR(state) {
+  let zone = user.heartRateZone(100);
   let hr = sensor.heartRate;
-  console.log("HR check:" + hr);
+  _controlHR(state, hr, zone, display.on, user.restingHeartRate, sensor);
+}
+
+export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor) {
+  var test = {start: false, vibra: "no"};
   if(state.hrMode !== controls.OFF) {
     sensor.start();
-    console.log("HRM on");
+    test.start = true;
   }
-  else if(display.on == false) {
+  else if(displayOn == false) {
     sensor.stop();
-    console.log("HRM off");
-    return;
+    test.start = false;
+    return test;
   }
   
-  if(!hr || hr <= 0 || state.hrMode == controls.OFF)
-    return;
+  if(!hr || hr <= 0 || state.hrMode == controls.OFF) {
+    return test;
+  }
 
-  let zone = user.heartRateZone(hr);
-  let hrCheckLowLimit = user.restingHeartRate * (state.hrMode == controls.FAT ? 1.15 : 1.2);
+  let hrCheckLowLimit = restingHeartRate * (state.hrMode == controls.FAT ? 1.15 : 1.2);
   console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + state.hrMode);
-
   
   if(hr > hrCheckLowLimit && state.hrMode !== controls.OFF) {
-    if(isCustomHR()) {
-      console.log("custom");
-      if(zone == "below-custom") vibra.playTooSlowSound();
-      else if(zone == "above-custom") vibra.playTooFastSound();
-      else vibration.start("bump");
+    if(_isCustomHR(zone)) {
+      if(zone == "below-custom") {
+        vibra.playTooSlowSound();
+        test.vibra = "slow";
+      }
+      else if(zone == "above-custom") {
+        vibra.playTooFastSound();
+        test.vibra = "fast";
+      }
+      else {
+        vibration.start("bump");
+        test.vibra = "bump";
+      }
     }
     else {
-      console.log("standard");
       if(state.hrMode == controls.FAT) {
-        console.log("fat " + zone);
-        if(zone == "out-of-range") vibra.playTooSlowSound();
-        else if(zone == "cardio" || zone == "peak") vibra.playTooFastSound();
-        else vibration.start("bump");
+        if(zone == "out-of-range") {
+          vibra.playTooSlowSound();
+          test.vibra = "slow";
+        }
+        else if(zone == "cardio" || zone == "peak") {
+          vibra.playTooFastSound();
+          test.vibra = "fast";
+        }
+        else {
+          vibration.start("bump");
+          test.vibra = "bump";
+        }
       }
       if(state.hrMode == controls.CARDIO) {
-        console.log("cardio " + zone);
-        if(zone == "out-of-range" || zone == "fat-burn") vibra.playTooSlowSound();
-        else if(zone == "peak") vibra.playTooFastSound();
-        else vibration.start("bump");
+        if(zone == "out-of-range" || zone == "fat-burn") {
+          vibra.playTooSlowSound();
+          test.vibra = "slow";
+        }
+        else if(zone == "peak") {
+          vibra.playTooFastSound();
+          test.vibra = "fast";
+        }
+        else {
+          vibration.start("bump");
+          test.vibra = "bump";
+        }
       }
       if(state.hrMode == controls.PEAK) {
-        console.log("peak " + zone);
-        if(zone !== "peak") vibra.playTooSlowSound();
-        else vibration.start("bump");
+        if(zone !== "peak") {
+          vibra.playTooSlowSound();
+          test.vibra = "slow";
+        }
+        else {
+          vibration.start("bump");
+          test.vibra = "bump";
+        }
       }
     }
   }
+  return test;
 }
 

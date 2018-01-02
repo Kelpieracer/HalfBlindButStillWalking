@@ -1,7 +1,9 @@
-import * as testVibra from "../test/vibra"
+import * as testVibra from "../test/vibra";
+import * as testHrm from "../test/hrm";
 
 export function unitTests() {
   console.log("UNIT TESTS STARTED");
+  testHrm.testHrm();
   testVibra.testVibra();
   console.log("UNIT TESTS ENDED");
 }

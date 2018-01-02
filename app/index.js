@@ -14,9 +14,6 @@
 // --- https://github.com/Kelpieracer/HalfBlindButStillWalking
 // --- MIT license
 
-import * as test from "../test/test"
-test.unitTests();
-
 import * as util from "../common/utils";
 import * as hrm from "../common/hrm";
 import * as store from "../common/store";
@@ -32,6 +29,10 @@ import { display } from "display";
 import { user } from "user-profile";
 import { vibration } from "haptics";
 import { units } from "user-settings";
+
+// Unit Tests
+import * as test from "../test/test"
+test.unitTests(); // Comment this out for production
 
 var dayTexts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var state = {hrMode: hrm.controls.OFF, activityMode: activity.modes.STEPS, alwaysOn: false};

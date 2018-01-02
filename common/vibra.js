@@ -19,7 +19,6 @@ function slowPing() {
 
 export function playTooSlowSound()
 {
-  console.log("Slow");
   slowPlay = 5;
   slowPing();
   display.on = true;
@@ -40,7 +39,6 @@ function fastPing() {
 
 export function playTooFastSound()
 {
-  console.log("Fast");
   fastPlay = 3;
   fastPing();
   display.on = true;
