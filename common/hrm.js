@@ -1,6 +1,7 @@
 
 // Heart Rate Monitor controls
 
+import { vibration } from "haptics";
 import * as vibra from "../common/vibra";
 import { user } from "user-profile";
 import { HeartRateSensor } from "heart-rate";
@@ -24,11 +25,12 @@ export function stop() {
 
 // Return HR value
 export function heartRate() {
-  sensor.start();
+  start();
   if(first) {
     first = false;
     return 0;         // Reject the first reading because it is not reliable
   }
+  return 130;
   return sensor.heartRate;
 }
 
@@ -47,13 +49,15 @@ export function _isCustomHR(zone) {
 // Monitors the target HR zone, and alerts if HR is too low or too high
 // If HR is near resting HR, then monitoring is off, since probably user's intention is then not to excercise.
 export function controlHR(state) {
-  let zone = user.heartRateZone(100);
-  let hr = sensor.heartRate;
-  _controlHR(state, hr, zone, display.on, user.restingHeartRate, sensor);
+  let hr = heartRate();
+  let zone = user.heartRateZone(hr);
+  let test = _controlHR(state, hr, zone, display.on, user.restingHeartRate, sensor);
+  //console.log("controlHR: "+hr+" "+JSON.stringify(test));
 }
 
 export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor) {
-  var test = {start: false, vibra: "no"};
+  let test = {start: false, vibra: "no"};
+  console.log(JSON.stringify(state)+" "+hr+" "+zone+" "+displayOn+" "+restingHeartRate+" "+JSON.stringify(sensor));
   if(state.hrMode !== controls.OFF) {
     sensor.start();
     test.start = true;
@@ -69,7 +73,7 @@ export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor)
   }
 
   let hrCheckLowLimit = restingHeartRate * (state.hrMode == controls.FAT ? 1.15 : 1.2);
-  console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + state.hrMode);
+  //console.log("HR:" + hr + " LowLimit:" + Math.round(hrCheckLowLimit) + " Mode:" + state.hrMode);
   
   if(hr > hrCheckLowLimit && state.hrMode !== controls.OFF) {
     if(_isCustomHR(zone)) {
@@ -82,7 +86,7 @@ export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor)
         test.vibra = "fast";
       }
       else {
-        vibration.start("bump");
+        vibra.playOk();
         test.vibra = "bump";
       }
     }
@@ -97,7 +101,7 @@ export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor)
           test.vibra = "fast";
         }
         else {
-          vibration.start("bump");
+          vibra.playOk();
           test.vibra = "bump";
         }
       }
@@ -111,7 +115,7 @@ export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor)
           test.vibra = "fast";
         }
         else {
-          vibration.start("bump");
+          vibra.playOk();
           test.vibra = "bump";
         }
       }
@@ -121,7 +125,7 @@ export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor)
           test.vibra = "slow";
         }
         else {
-          vibration.start("bump");
+          vibra.playOk();
           test.vibra = "bump";
         }
       }

@@ -9,8 +9,6 @@ export function unitTests() {
 }
 
 export function assert(condition, message) {
-    console.log(JSON.stringify(condition));
-
     if (!condition) {
         message = message || "Assertion failed";
         if (typeof Error !== "undefined") {

@@ -21,7 +21,7 @@ export function playTooSlowSound()
 {
   slowPlay = 5;
   slowPing();
-  display.on = true;
+  display.poke();
 }
 
 // Indicate too high HR by vibrating fastPlay times
@@ -41,6 +41,10 @@ export function playTooFastSound()
 {
   fastPlay = 3;
   fastPing();
-  display.on = true;
+  display.poke();
 }
 
+export function playOk()
+{
+    vibration.start("ping");
+}

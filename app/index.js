@@ -71,8 +71,6 @@ function updateClock() {
   let timePreference = util.formatDate(dateToday.getHours(), preferences.clockDisplay, dayTexts[dayNum]);
   let hours = util.spacePad(timePreference.hour);
 
-  disp.checkDisplay(state);
-
   myLabelTime.text = `${hours}:${mins}`;
   myLabelBatt.text = myBatt + "%";
   myLabelDay.text = day;
@@ -137,6 +135,7 @@ function updateClock() {
       hrcol = hotCol;
     myLabelHR.style.fill = hrcol;
   }
+  disp.checkDisplay(state);
 }
 
 // When display wakes up or switches off
@@ -179,7 +178,6 @@ function changeHRMode(add) {
     if(state.hrMode == hrm.controls.PEAK) myHRButton.style.fill = hotCol;
   }
   console.log("New HR control mode:" + state.hrMode)
-  disp.checkDisplay(state);
   if(state.hrMode == hrm.controls.OFF) {
     myBattButton.style.visibility = "hidden";
     state.alwaysOn = false;
@@ -225,12 +223,14 @@ myBattButton.onactivate = function(evt) {
 }
 
 // Main
+display.on = false;
+display.autoOff = true;
+display.poke();
 state = store.load(state);
 changeHRMode(0);
 changeDispMode(false);
-disp.checkDisplay(state);
 display.onchange = () => displayChange();
 clock.ontick = () => updateClock();
 hrm.start();
 hrm.controlHR(state);
-setInterval(hrm.controlHR(state), 20000);
+setInterval(function() { hrm.controlHR(state); }, 20000);
