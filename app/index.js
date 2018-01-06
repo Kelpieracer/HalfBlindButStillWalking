@@ -32,7 +32,7 @@ import { units } from "user-settings";
 
 // Unit Tests
 import * as test from "../test/test"
-test.unitTests(); // Comment this out for production
+//test.unitTests(); // Comment this out for production
 
 var dayTexts = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 var state = {hrMode: hrm.controls.OFF, activityMode: activity.modes.STEPS, alwaysOn: false};

@@ -46,5 +46,5 @@ export function playTooFastSound()
 
 export function playOk()
 {
-    vibration.start("ping");
+    vibration.start("bump");
 }

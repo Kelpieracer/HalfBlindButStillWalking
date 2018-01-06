@@ -30,7 +30,6 @@ export function heartRate() {
     first = false;
     return 0;         // Reject the first reading because it is not reliable
   }
-  return 130;
   return sensor.heartRate;
 }
 
@@ -57,7 +56,7 @@ export function controlHR(state) {
 
 export function _controlHR(state, hr, zone, displayOn, restingHeartRate, sensor) {
   let test = {start: false, vibra: "no"};
-  console.log(JSON.stringify(state)+" "+hr+" "+zone+" "+displayOn+" "+restingHeartRate+" "+JSON.stringify(sensor));
+  //console.log(JSON.stringify(state)+" "+hr+" "+zone+" "+displayOn+" "+restingHeartRate+" "+JSON.stringify(sensor));
   if(state.hrMode !== controls.OFF) {
     sensor.start();
     test.start = true;
